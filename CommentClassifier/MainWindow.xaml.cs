@@ -10,6 +10,7 @@ namespace CommentClassifier
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = new MainViewModel();
         }
     }
 }
