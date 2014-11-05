@@ -4,12 +4,22 @@
         Title="MainWindow" Height="350" Width="525">
     <DockPanel>
         <StackPanel DockPanel.Dock="Top">
-            <TextBox Text="{Binding Path}" />
+            <TextBox Text="{Binding FolderPath}" />
             <Button Command="{Binding Scan}">Scan</Button>
+            <Button Command="{Binding Save}">Save</Button>
+            <Button Command="{Binding Load}">Load</Button>
         </StackPanel>
         
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+            <Button>Comment</Button>
+            <Button>Copyright</Button>
+            <Button>Block end</Button>
+            <Button>Skip</Button>
+            <Button>Skip</Button>
+        </StackPanel>
+
         <TextBlock>
         </TextBlock>
-        
+
     </DockPanel>
 </Window>
