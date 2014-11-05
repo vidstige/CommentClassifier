@@ -55,7 +55,24 @@ namespace CommentClassifier
 
         public ICommand Load { get { return new DelegatingCommand(DoLoad); } }
 
-        private void DoSave()
+        public ICommand ClassifyAs { get { return new DelegatingCommand(Classify); } }
+        public ICommand SkipLine { get { return new DelegatingCommand(x => NextComment()); } }
+
+        private void Classify(object parameter)
+        {
+            var category = parameter as string;
+            if (_sourceCode[_currrentSourceCodeFileIndex].Categories.ContainsKey(_currentLine))
+            {
+                _sourceCode[_currrentSourceCodeFileIndex].Categories[_currentLine] = category;
+            }
+            else
+            {
+                System.Console.WriteLine("That was not a comment...?");
+            }
+            NextComment();
+        }
+
+        private void DoSave(object unused)
         {
             var file = new FileInfo(Path.Combine(FolderPath, "comments.txt"));
             using (var writer = new StreamWriter(file.OpenWrite()))
@@ -75,7 +92,7 @@ namespace CommentClassifier
             }
         }
 
-        private void DoLoad()
+        private void DoLoad(object unused)
         {
             var file = new FileInfo(Path.Combine(FolderPath, "comments.txt"));
             var result = new List<SourceCodeFile>();
@@ -94,6 +111,7 @@ namespace CommentClassifier
                         if (filename != null)
                         {
                             result.Add(new SourceCodeFile(new FileInfo(filename), dict));
+                            dict = new Dictionary<int, string>();
                         }
                         filename = line;
                     }
@@ -122,9 +140,31 @@ namespace CommentClassifier
             {
                 _currrentSourceCodeFileIndex = 0;
                 _currentFileContents = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
-            }
 
-            _currentLine = 0;
+                _currentLine = 0;
+            }
+            else
+            {
+                var lines = _sourceCode[_currrentSourceCodeFileIndex].Categories.Keys.ToList();
+                lines.Sort();
+                var old = _currentLine;
+                foreach (var lineNumber in lines)
+                {
+                    if (lineNumber > old)
+                    {
+                        _currentLine = lineNumber;
+                        break;
+                    }
+                }
+
+                if (_currentLine == old)
+                {
+                    // Out of comments, go to next file
+                    _currrentSourceCodeFileIndex++;
+                    _currentFileContents = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
+                    _currentLine = 0;
+                }
+            }
 
             RaisePropertyChanged("CurrentLine");
         }
@@ -144,7 +184,7 @@ namespace CommentClassifier
             }
         }
 
-        private void DoScan()
+        private void DoScan(object unused)
         {
             var sourceCode = new List<SourceCodeFile>();
             foreach (var f in Search(new DirectoryInfo(_folderPath), new[] { ".cpp", ".hpp", ".h" }))

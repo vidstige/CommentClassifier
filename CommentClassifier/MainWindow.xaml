@@ -11,11 +11,11 @@
         </StackPanel>
         
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-            <Button>Comment</Button>
-            <Button>Copyright</Button>
-            <Button>Block end</Button>
-            <Button>Skip</Button>
-            <Button>Skip</Button>
+            <Button Command="{Binding ClassifyAs}" CommandParameter="comment">Comment</Button>
+            <Button Command="{Binding ClassifyAs}" CommandParameter="block_end">Block end</Button>
+            <Button Command="{Binding ClassifyAs}" CommandParameter="todo">TODO</Button>
+            <Button Command="{Binding ClassifyAs}" CommandParameter="copyright">Copyright</Button>
+            <Button Command="{Binding SkipLine}">Skip</Button>
         </StackPanel>
 
         <TextBlock Text="{Binding CurrentLine}" FontSize="24"/>

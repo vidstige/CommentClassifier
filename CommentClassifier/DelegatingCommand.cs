@@ -5,9 +5,9 @@ namespace CommentClassifier
 {
     class DelegatingCommand: ICommand
     {
-        private readonly Action _a;
+        private readonly Action<object> _a;
 
-        public DelegatingCommand(Action a)
+        public DelegatingCommand(Action<object> a)
         {
             _a = a;
         }
@@ -23,7 +23,7 @@ namespace CommentClassifier
 
         public void Execute(object parameter)
         {
-            _a();
+            _a(parameter);
         }
     }
 }
