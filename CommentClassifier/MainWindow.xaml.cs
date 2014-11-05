@@ -10,7 +10,12 @@ namespace CommentClassifier
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
+            DataContext = new MainViewModel(this);
+        }
+
+        public void ScrollIntoView(object item)
+        {
+            _fileContents.ScrollIntoView(item);
         }
     }
 }

@@ -43,9 +43,16 @@ namespace CommentClassifier
         private List<SourceCodeFile> _sourceCode;
 
         private int _currrentSourceCodeFileIndex = -1;
-        private string[] _currentFileContents;
+        private LineViewModel[] _currentFileContents;
         private int _currentLine;
-        
+
+        private readonly MainWindow _scroller;
+
+        public MainViewModel(MainWindow scroller)
+        {
+            _scroller = scroller;
+        }
+
         public string FolderPath
         {
             get { return _folderPath; }
@@ -56,14 +63,14 @@ namespace CommentClassifier
             }
         }
 
-        public string CurrentLine
-        {
-            get
-            {
-                if (_currentFileContents == null) return string.Empty;
-                return _currentFileContents[_currentLine];
-            }
-        }
+        //public string CurrentLine
+        //{
+        //    get
+        //    {
+        //        if (_currentFileContents == null) return string.Empty;
+        //        return _currentFileContents[_currentLine];
+        //    }
+        //}
 
         private List<SourceCodeFile> SourceCode
         {
@@ -105,7 +112,7 @@ namespace CommentClassifier
             get
             {
                 if (_currentFileContents == null) return new LineViewModel[0];
-                return _currentFileContents.Select((v, i) => new LineViewModel(v, BrushForLineNumber(i))).ToArray();
+                return _currentFileContents;
             }
         }
 
@@ -203,7 +210,9 @@ namespace CommentClassifier
             if (_currrentSourceCodeFileIndex < 0)
             {
                 _currrentSourceCodeFileIndex = 0;
-                _currentFileContents = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
+                RaisePropertyChanged("FilePath");
+                var tmp = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
+                _currentFileContents = tmp.Select((v, i) => new LineViewModel(v, BrushForLineNumber(i))).ToArray();
 
                 _currentLine = 0;
             }
@@ -225,15 +234,28 @@ namespace CommentClassifier
                 {
                     // Out of comments, go to next file
                     _currrentSourceCodeFileIndex++;
-                    _currentFileContents = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
-                    //RaisePropertyChanged("CurrentFileContents");
+                    RaisePropertyChanged("FilePath");
+                    
+                    var tmp = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
+                    _currentFileContents = tmp.Select((v, i) => new LineViewModel(v, BrushForLineNumber(i))).ToArray();
+
                     _currentLine = 0;
                 }
             }
 
+            _scroller.ScrollIntoView(CurrentFileContents[_currentLine]);
 
             RaisePropertyChanged("CurrentFileContents");
             RaisePropertyChanged("CurrentLine");
+        }
+
+        public string FilePath
+        {
+            get
+            {
+                if (_sourceCode == null) return string.Empty;
+                return _sourceCode[_currrentSourceCodeFileIndex].File.FullName;
+            }
         }
 
         private IEnumerable<FileInfo> Search(DirectoryInfo root, string[] extensions)

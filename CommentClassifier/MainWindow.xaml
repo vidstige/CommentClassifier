@@ -9,6 +9,7 @@
             <Button Command="{Binding Save}">Save</Button>
             <Button Command="{Binding Load}">Load</Button>
             <ProgressBar Height="20" Minimum="0" Maximum="{Binding TotalComments, Mode=OneWay}" Value="{Binding CommentsClassified, Mode=OneWay}" />
+            <TextBox IsReadOnly="True" Text="{Binding FilePath, Mode=OneWay}" FontSize="24" />
         </StackPanel>
         
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
@@ -21,7 +22,7 @@
             <Button FontSize="24" Command="{Binding SkipLine}">Skip</Button>
         </StackPanel>
 
-        <ListView ItemsSource="{Binding CurrentFileContents}" HorizontalContentAlignment="Stretch">
+        <ListView ItemsSource="{Binding CurrentFileContents}" HorizontalContentAlignment="Stretch" x:Name="_fileContents">
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListBoxItem}">
                     <Setter Property="Template">
