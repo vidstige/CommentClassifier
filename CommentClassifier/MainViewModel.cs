@@ -266,9 +266,13 @@ namespace CommentClassifier
             }
             if (oldFileIndex != _currrentSourceCodeFileIndex || _currentLine != oldLine)
             {
-                _scroller.ScrollIntoView(_currentFileContents[_currentLine]);
+                // To update the selected row. Read from file not really needed
+                var tmp = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
+                _currentFileContents = tmp.Select((v, i) => new LineViewModel(v, BrushForLineNumber(i))).ToArray();
 
                 RaisePropertyChanged("CurrentFileContents");
+
+                _scroller.ScrollIntoView(_currentFileContents[_currentLine]);
             }
 
             //if (_currrentSourceCodeFileIndex < 0)
