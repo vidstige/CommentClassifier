@@ -49,6 +49,35 @@ namespace CommentClassifier
             }
         }
 
+        private List<SourceCodeFile> SourceCode
+        {
+            set
+            {
+                _sourceCode = value;
+                RaisePropertyChanged("TotalComments");
+                RaisePropertyChanged("CommentsClassified");
+            }
+        }
+
+        private IEnumerable<string> AllCatagories
+        {
+            get
+            {
+                if (_sourceCode == null) return Enumerable.Empty<string>();
+                return _sourceCode.SelectMany(scf => scf.Categories).Select(e => e.Value);
+            }
+        }
+
+        public int CommentsClassified
+        {
+            get { return AllCatagories.Count(c => c != null); }
+        }
+
+        public int TotalComments
+        {
+            get { return AllCatagories.Count(); }
+        }
+
         public ICommand Scan { get { return new DelegatingCommand(DoScan); } }
 
         public ICommand Save { get { return new DelegatingCommand(DoSave); } }
@@ -69,6 +98,9 @@ namespace CommentClassifier
             {
                 System.Console.WriteLine("That was not a comment...?");
             }
+
+            RaisePropertyChanged("CommentsClassified");
+
             NextComment();
         }
 
@@ -119,7 +151,7 @@ namespace CommentClassifier
                     {
                         var category = parts[1];
                         if (string.IsNullOrEmpty(category)) category = null;
-                        dict[int.Parse(parts[0])] = parts[1];
+                        dict[int.Parse(parts[0])] = category;
                     }
                     
                 }
@@ -128,7 +160,8 @@ namespace CommentClassifier
                     result.Add(new SourceCodeFile(new FileInfo(filename), dict));
                 }
             }
-            _sourceCode = result;
+            
+            SourceCode = result;
 
             // Go to next comment
             NextComment();
@@ -217,8 +250,7 @@ namespace CommentClassifier
                 sourceCode.Add(new SourceCodeFile(f, tmp));
 
             }
-            _sourceCode = sourceCode;
-            
+            SourceCode = sourceCode;
         }
     }
 }

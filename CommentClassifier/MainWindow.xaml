@@ -8,6 +8,7 @@
             <Button Command="{Binding Scan}">Scan</Button>
             <Button Command="{Binding Save}">Save</Button>
             <Button Command="{Binding Load}">Load</Button>
+            <ProgressBar Height="20" Minimum="0" Maximum="{Binding TotalComments, Mode=OneWay}" Value="{Binding CommentsClassified, Mode=OneWay}" />
         </StackPanel>
         
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
@@ -15,6 +16,7 @@
             <Button Command="{Binding ClassifyAs}" CommandParameter="block_end">Block end</Button>
             <Button Command="{Binding ClassifyAs}" CommandParameter="todo">TODO</Button>
             <Button Command="{Binding ClassifyAs}" CommandParameter="copyright">Copyright</Button>
+            <Button Command="{Binding ClassifyAs}" CommandParameter="code">Code</Button>
             <Button Command="{Binding SkipLine}">Skip</Button>
         </StackPanel>
 
