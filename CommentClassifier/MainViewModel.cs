@@ -62,16 +62,7 @@ namespace CommentClassifier
                 RaisePropertyChanged();
             }
         }
-
-        //public string CurrentLine
-        //{
-        //    get
-        //    {
-        //        if (_currentFileContents == null) return string.Empty;
-        //        return _currentFileContents[_currentLine];
-        //    }
-        //}
-
+        
         private List<SourceCodeFile> SourceCode
         {
             set
@@ -124,7 +115,7 @@ namespace CommentClassifier
         public ICommand Load { get { return new DelegatingCommand(DoLoad); } }
 
         public ICommand ClassifyAs { get { return new DelegatingCommand(Classify); } }
-        public ICommand SkipLine { get { return new DelegatingCommand(x => NextComment()); } }
+        public ICommand SkipLine { get { return new DelegatingCommand(x => Classify(string.Empty)); } }
 
         private void Classify(object parameter)
         {
@@ -206,48 +197,120 @@ namespace CommentClassifier
             NextComment();
         }
 
+        private bool CurrentLineCategorized()
+        {
+            if (_sourceCode[_currrentSourceCodeFileIndex].Categories.ContainsKey(_currentLine))
+            {
+                return _sourceCode[_currrentSourceCodeFileIndex].Categories[_currentLine] != null;
+            }
+            return true; // should not happen
+        }
+
+        private List<int> linesCache;
+        private int cacheKey = -1;
+
+        private void UpdateCache()
+        {
+            if (cacheKey != _currrentSourceCodeFileIndex)
+            {
+                linesCache = _sourceCode[_currrentSourceCodeFileIndex].Categories.Keys.ToList();
+                linesCache.Sort();
+                cacheKey = _currrentSourceCodeFileIndex;
+            }
+        }
+
+        private bool OutOfComments()
+        {
+            if (_currrentSourceCodeFileIndex < 0) return true;
+            UpdateCache();
+            if (!linesCache.Any()) return true;
+            return _currentLine >= linesCache.Last();
+        }
+
+        private void NextCommentLine()
+        {
+            UpdateCache();
+            foreach (var lineNumber in linesCache)
+            {
+                if (lineNumber > _currentLine)
+                {
+                    _currentLine = lineNumber;
+                    break;
+                }
+            }
+        }
+
         private void NextComment()
         {
-            if (_currrentSourceCodeFileIndex < 0)
-            {
-                _currrentSourceCodeFileIndex = 0;
-                RaisePropertyChanged("FilePath");
-                var tmp = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
-                _currentFileContents = tmp.Select((v, i) => new LineViewModel(v, BrushForLineNumber(i))).ToArray();
+            var oldFileIndex = _currrentSourceCodeFileIndex;
+            var oldLine = _currentLine;
 
-                _currentLine = 0;
-            }
-            else
+            while (_currrentSourceCodeFileIndex < 0 || CurrentLineCategorized())
             {
-                var lines = _sourceCode[_currrentSourceCodeFileIndex].Categories.Keys.ToList();
-                lines.Sort();
-                var old = _currentLine;
-                foreach (var lineNumber in lines)
+                if (OutOfComments())
                 {
-                    if (lineNumber > old && _sourceCode[_currrentSourceCodeFileIndex].Categories[lineNumber] == null)
-                    {
-                        _currentLine = lineNumber;
-                        break;
-                    }
-                }
-
-                if (_currentLine == old)
-                {
-                    // Out of comments, go to next file
                     _currrentSourceCodeFileIndex++;
-                    RaisePropertyChanged("FilePath");
-                    
-                    var tmp = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
-                    _currentFileContents = tmp.Select((v, i) => new LineViewModel(v, BrushForLineNumber(i))).ToArray();
-
                     _currentLine = 0;
                 }
+                else
+                {
+                    NextCommentLine();
+                }
             }
 
-            _scroller.ScrollIntoView(CurrentFileContents[_currentLine]);
+            if (oldFileIndex != _currrentSourceCodeFileIndex)
+            {
+                var tmp = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
+                _currentFileContents = tmp.Select((v, i) => new LineViewModel(v, BrushForLineNumber(i))).ToArray();
+                RaisePropertyChanged("FilePath");
+            }
+            if (oldFileIndex != _currrentSourceCodeFileIndex || _currentLine != oldLine)
+            {
+                _scroller.ScrollIntoView(_currentFileContents[_currentLine]);
 
-            RaisePropertyChanged("CurrentFileContents");
-            RaisePropertyChanged("CurrentLine");
+                RaisePropertyChanged("CurrentFileContents");
+            }
+
+            //if (_currrentSourceCodeFileIndex < 0)
+            //{
+            //    _currrentSourceCodeFileIndex = 0;
+            //    RaisePropertyChanged("FilePath");
+            //    var tmp = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
+            //    _currentFileContents = tmp.Select((v, i) => new LineViewModel(v, BrushForLineNumber(i))).ToArray();
+
+            //    _currentLine = 0;
+            //}
+            //else
+            //{
+            //    var lines = _sourceCode[_currrentSourceCodeFileIndex].Categories.Keys.ToList();
+            //    lines.Sort();
+            //    var old = _currentLine;
+            //    foreach (var lineNumber in lines)
+            //    {
+            //        if (lineNumber > old && _sourceCode[_currrentSourceCodeFileIndex].Categories[lineNumber] == null)
+            //        {
+            //            _currentLine = lineNumber;
+            //            break;
+            //        }
+            //    }
+
+            //    if (_currentLine == old)
+            //    {
+            //        // Out of comments, go to next file
+            //        _currrentSourceCodeFileIndex++;
+            //        RaisePropertyChanged("FilePath");
+                    
+            //        var tmp = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
+            //        _currentFileContents = tmp.Select((v, i) => new LineViewModel(v, BrushForLineNumber(i))).ToArray();
+
+            //        _currentLine = 0;
+            //    }
+            //}
+
+            //_scroller.ScrollIntoView(CurrentFileContents[_currentLine]);
+
+            //RaisePropertyChanged("CurrentFileContents");
+            //RaisePropertyChanged("CurrentLine");
         }
 
         public string FilePath
