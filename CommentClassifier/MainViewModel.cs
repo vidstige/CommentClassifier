@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace CommentClassifier
 {
@@ -19,6 +20,21 @@ namespace CommentClassifier
         public Dictionary<int, string> Categories { get { return _commentCategories; } }
 
         public FileInfo File { get { return _file; } }
+    }
+
+    public class LineViewModel: ViewModel
+    {
+        private readonly string _text;
+        private readonly Brush _background;
+
+        public LineViewModel(string text, Brush background)
+        {
+            _text = text;
+            _background = background;
+        }
+
+        public string Text { get { return _text; } }
+        public Brush Background { get { return _background; } }
     }
 
     public class MainViewModel: ViewModel
@@ -76,6 +92,21 @@ namespace CommentClassifier
         public int TotalComments
         {
             get { return AllCatagories.Count(); }
+        }
+
+        private Brush BrushForLineNumber(int lineNumber)
+        {
+            if (lineNumber == _currentLine) return Brushes.CornflowerBlue;
+            return Brushes.LightGray;
+        }
+
+        public LineViewModel[] CurrentFileContents
+        {
+            get
+            {
+                if (_currentFileContents == null) return new LineViewModel[0];
+                return _currentFileContents.Select((v, i) => new LineViewModel(v, BrushForLineNumber(i))).ToArray();
+            }
         }
 
         public ICommand Scan { get { return new DelegatingCommand(DoScan); } }
@@ -183,7 +214,7 @@ namespace CommentClassifier
                 var old = _currentLine;
                 foreach (var lineNumber in lines)
                 {
-                    if (lineNumber > old)
+                    if (lineNumber > old && _sourceCode[_currrentSourceCodeFileIndex].Categories[lineNumber] == null)
                     {
                         _currentLine = lineNumber;
                         break;
@@ -195,10 +226,13 @@ namespace CommentClassifier
                     // Out of comments, go to next file
                     _currrentSourceCodeFileIndex++;
                     _currentFileContents = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
+                    //RaisePropertyChanged("CurrentFileContents");
                     _currentLine = 0;
                 }
             }
 
+
+            RaisePropertyChanged("CurrentFileContents");
             RaisePropertyChanged("CurrentLine");
         }
 

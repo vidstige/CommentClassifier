@@ -1,7 +1,7 @@
 ﻿<Window x:Class="CommentClassifier.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="350" Width="600">
     <DockPanel>
         <StackPanel DockPanel.Dock="Top">
             <TextBox Text="{Binding FolderPath}" />
@@ -12,15 +12,36 @@
         </StackPanel>
         
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-            <Button Command="{Binding ClassifyAs}" CommandParameter="comment">Comment</Button>
-            <Button Command="{Binding ClassifyAs}" CommandParameter="block_end">Block end</Button>
-            <Button Command="{Binding ClassifyAs}" CommandParameter="todo">TODO</Button>
-            <Button Command="{Binding ClassifyAs}" CommandParameter="copyright">Copyright</Button>
-            <Button Command="{Binding ClassifyAs}" CommandParameter="code">Code</Button>
-            <Button Command="{Binding SkipLine}">Skip</Button>
+            <Button FontSize="24" Command="{Binding ClassifyAs}" CommandParameter="comment">Comment</Button>
+            <Button FontSize="24" Command="{Binding ClassifyAs}" CommandParameter="block_end">Block end</Button>
+            <Button FontSize="24" Command="{Binding ClassifyAs}" CommandParameter="todo">TODO</Button>
+            <Button FontSize="24" Command="{Binding ClassifyAs}" CommandParameter="copyright">Copyright</Button>
+            <Button FontSize="24" Command="{Binding ClassifyAs}" CommandParameter="code">Code</Button>
+            <Button FontSize="24" Command="{Binding ClassifyAs}" CommandParameter="header">Header</Button>
+            <Button FontSize="24" Command="{Binding SkipLine}">Skip</Button>
         </StackPanel>
 
-        <TextBlock Text="{Binding CurrentLine}" FontSize="24"/>
+        <ListView ItemsSource="{Binding CurrentFileContents}" HorizontalContentAlignment="Stretch">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListBoxItem}">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                                <ContentPresenter/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Text}" Background="{Binding Background}" Margin="0" Padding="0"/>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <!--<StackPanel>
+            <TextBlock Background="CornflowerBlue" Foreground="White" Text="{Binding CurrentLine}" FontSize="24"/>
+        </StackPanel>-->
 
     </DockPanel>
 </Window>
