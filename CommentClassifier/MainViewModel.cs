@@ -24,8 +24,11 @@ namespace CommentClassifier
     public class MainViewModel: ViewModel
     {
         private string _folderPath;
-
         private List<SourceCodeFile> _sourceCode;
+
+        private int _currrentSourceCodeFileIndex = -1;
+        private string[] _currentFileContents;
+        private int _currentLine;
         
         public string FolderPath
         {
@@ -34,6 +37,15 @@ namespace CommentClassifier
             {
                 _folderPath = value;
                 RaisePropertyChanged();
+            }
+        }
+
+        public string CurrentLine
+        {
+            get
+            {
+                if (_currentFileContents == null) return string.Empty;
+                return _currentFileContents[_currentLine];
             }
         }
 
@@ -51,7 +63,7 @@ namespace CommentClassifier
                 writer.WriteLine("# comment types");
                 foreach (var sourceCodeFile in _sourceCode)
                 {
-                    writer.WriteLine("{0}", sourceCodeFile.File);
+                    writer.WriteLine("{0}", sourceCodeFile.File.FullName);
 
                     foreach (var entry in sourceCodeFile.Categories)
                     {
@@ -74,28 +86,47 @@ namespace CommentClassifier
                 while (!reader.EndOfStream)
                 {
                     var line = reader.ReadLine();
-                    if (!line.StartsWith("#"))
+                    if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
+                    
+                    var parts = line.Split('=');
+                    if (parts.Length == 1)
                     {
-                        var parts = line.Split('=');
-                        if (parts.Length == 1)
+                        if (filename != null)
                         {
-                            if (filename != null)
-                            {
-                                result.Add(new SourceCodeFile(new FileInfo(filename), dict));
-                            }
-                            filename = line;
+                            result.Add(new SourceCodeFile(new FileInfo(filename), dict));
                         }
-                        if (parts.Length == 2)
-                        {
-                            dict[int.Parse(parts[0])] = parts[1];
-                        }
+                        filename = line;
                     }
+                    if (parts.Length == 2)
+                    {
+                        var category = parts[1];
+                        if (string.IsNullOrEmpty(category)) category = null;
+                        dict[int.Parse(parts[0])] = parts[1];
+                    }
+                    
                 }
                 if (filename != null)
                 {
                     result.Add(new SourceCodeFile(new FileInfo(filename), dict));
                 }
             }
+            _sourceCode = result;
+
+            // Go to next comment
+            NextComment();
+        }
+
+        private void NextComment()
+        {
+            if (_currrentSourceCodeFileIndex < 0)
+            {
+                _currrentSourceCodeFileIndex = 0;
+                _currentFileContents = File.ReadAllLines(_sourceCode[_currrentSourceCodeFileIndex].File.FullName);
+            }
+
+            _currentLine = 0;
+
+            RaisePropertyChanged("CurrentLine");
         }
 
         private IEnumerable<FileInfo> Search(DirectoryInfo root, string[] extensions)

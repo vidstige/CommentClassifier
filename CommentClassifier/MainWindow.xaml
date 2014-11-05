@@ -18,8 +18,7 @@
             <Button>Skip</Button>
         </StackPanel>
 
-        <TextBlock>
-        </TextBlock>
+        <TextBlock Text="{Binding CurrentLine}" FontSize="24"/>
 
     </DockPanel>
 </Window>
