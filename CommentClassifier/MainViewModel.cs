@@ -104,7 +104,8 @@ namespace CommentClassifier
         private Brush BrushForLineNumber(int lineNumber)
         {
             if (lineNumber == _currentLine) return Brushes.CornflowerBlue;
-            return Brushes.LightGray;
+            if (_sourceCode[_currrentSourceCodeFileIndex].Categories.ContainsKey(lineNumber)) return Brushes.LightGray;
+            return Brushes.White;
         }
 
         public LineViewModel[] CurrentFileContents
